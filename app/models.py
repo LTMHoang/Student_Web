@@ -34,18 +34,20 @@ class User(db.Model, UserMixin):
 
 if __name__ == '__main__':
     with app.app_context():
+        #Xóa các bảng đã có sẵn
         db.drop_all()
-
 
         # Tạo các bảng
         db.create_all()
 
+        #Tạo các role
         r1 = Role(name=UserRoleEnum.ADMIN)
         r2 = Role(name=UserRoleEnum.USER)
         r3 = Role(name=UserRoleEnum.TEACHER)
         r4 = Role(name=UserRoleEnum.STAFF)
         db.session.add_all([r1, r2, r3, r4])
 
+        #Tạo các user
         import hashlib
         u1 = User(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
                  user_role_id=1)
