@@ -1,7 +1,5 @@
-
-
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, Boolean, Table, DateTime
-from sqlalchemy.orm import relationship, Relationship
+from sqlalchemy.orm import relationship, Relationship, registry
 from app import db, app
 from flask_login import UserMixin
 import enum
@@ -22,7 +20,7 @@ class SemesterEnum(enum.Enum):
 
 
 class Role(db.Model):
-    __tablename = 'role'
+    __tablename__ = 'role'
     # id = Column(Integer,primary_key=True, autoincrement=True)
     name = Column(Enum(UserRoleEnum), primary_key=True)
 
@@ -47,11 +45,11 @@ class User(db.Model, UserMixin):
     def __str__(self):
         return self.name
 
+
 class Teacher(User):
     __tablename__ = 'teacher'
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
     teachingdetails = Relationship('TeachingDetails', back_populates='teacher')
-
 
 
 class Year(db.Model):
@@ -82,19 +80,23 @@ class ClassRoom(db.Model):
     year_name = Column(String(11), ForeignKey(Year.name), nullable=False)
     teachingdetails = Relationship('TeachingDetails', back_populates='classroom')
     students = relationship('Student', backref='classroom', lazy=True)
+
     def __str__(self):
         return self.name
+
 
 class Student(User):
     __tablename__ = 'student'
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
     subjectdetails = Relationship('SubjectDetails', back_populates='student')
-    id_classroom = Column(Integer, ForeignKey(ClassRoom.id),nullable=False)
+    id_classroom = Column(Integer, ForeignKey(ClassRoom.id), nullable=False)
+
+
 class Subject(db.Model):
     __tablename__ = 'subject'
     name = Column(String(100), primary_key=True)
     teachingdetails = Relationship('TeachingDetails', back_populates='subject')
-    subject_details = relationship('SubjectDetails', back_populates='subject')
+    subjectdetails = relationship('SubjectDetails', back_populates='subject')
 
     def __str__(self):
         return self.name
@@ -104,41 +106,43 @@ class Semester(db.Model):
     __tablename__ = 'semester'
     name = Column(Enum(SemesterEnum), primary_key=True)
     year = Column(String(11), ForeignKey(Year.name), nullable=False)
-    subject_details = relationship('SubjectDetails', back_populates='Semester')
+    subjectdetails = relationship('SubjectDetails', back_populates='semester')
 
     def __str__(self):
         return self.name
 
+
 class TeachingDetails(db.Model):
-   __tablename__='teachingdetails'
-   id = Column(Integer, primary_key=True)
-   id_giaovien = Column(Enum(UserRoleEnum),ForeignKey(User.id))
-   subject_name = Column(String(100),ForeignKey(Subject.name))
-   classroom_name=Column(String(5),ForeignKey(ClassRoom.name))
-   schedule=Column(DateTime, nullable=False)
-   teacher = Relationship('Teahcher',back_populates='teachingdetails')
-   subject = Relationship('Subject', back_populates='teachingdetails')
-   teacher = Relationship('ClassRoom', back_populates='teachingdetails')
+    __tablename__ = 'teachingdetails'
+    id = Column(Integer, primary_key=True)
+    id_giaovien = Column(Integer, ForeignKey(User.id))
+    subject_name = Column(String(100), ForeignKey(Subject.name))
+    classroom_name = Column(Integer, ForeignKey(ClassRoom.id))
+    schedule = Column(DateTime, nullable=False)
+    teacher = Relationship('Teacher', back_populates='teachingdetails')
+    subject = Relationship('Subject', back_populates='teachingdetails')
+    classroom = Relationship('ClassRoom', back_populates='teachingdetails')
 
 
 class SubjectDetails(db.Model):
-    __tablename__='subjectdetails'
-    id = Column(Integer,primary_key=True)
+    __tablename__ = 'subjectdetails'
+    id = Column(Integer, primary_key=True)
     marktype = Column(String(50), nullable=False)
-    mark = Column(Float,nullable=False),
-    subject_name = Column(String(100),ForeignKey(Subject.name),nullable=True)
-    id_student = Column(Integer, ForeignKey(Student.id),nullable=False)
+    mark = Column(Float, nullable=False),
+    subject_name = Column(String(100), ForeignKey(Subject.name), nullable=True)
+    id_student = Column(Integer, ForeignKey(Student.id), nullable=False)
     semester_name = Column(Enum(SemesterEnum), ForeignKey(Semester.name), nullable=False)
     student = Relationship('Student', back_populates='subjectdetails')
     semester = Relationship('Semester', back_populates='subjectdetails')
     subject = Relationship('Subject', back_populates='subjectdetails')
+
 
 if __name__ == '__main__':
     with app.app_context():
         # Xóa các bảng đã có sẵn
         db.drop_all()
 
-        # Tạo các bảng
+        #Tạo các bảng
         db.create_all()
 
         # Tạo các role
@@ -152,9 +156,9 @@ if __name__ == '__main__':
         import hashlib
 
         u1 = User(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                  user_role=UserRoleEnum.ADMIN)
+                  user_role=UserRoleEnum.ADMIN, sex=True)
         u2 = User(name='User2', username='user2', password=str(hashlib.md5('654321'.encode('utf-8')).hexdigest()),
-                  user_role=UserRoleEnum.USER)
+                  user_role=UserRoleEnum.USER, sex=True)
         db.session.add_all([u1, u2])
 
         db.session.commit()
