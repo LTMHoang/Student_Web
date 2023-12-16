@@ -10,19 +10,23 @@ import enum
 class UserRoleEnum(enum.Enum):
     USER = "user"
     ADMIN = "admin"
-    TEACHER = "teacher"
-    STAFF = "staff"
 
 
 class SemesterEnum(enum.Enum):
-   I = "Học Kỳ I"
-   II = "Học Kỳ II"
+    I = "Học Kỳ I"
+    II = "Học Kỳ II"
+
+
+class RoleEnum(enum.Enum):
+    Teacher = "teacher",
+    Student = "student",
+    Staff = "staff",
 
 
 class Role(db.Model):
     __tablename__ = 'role'
-    # id = Column(Integer,primary_key=True, autoincrement=True)
-    name = Column(Enum(UserRoleEnum), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(Enum(RoleEnum), primary_key=True)
 
     def __str__(self):
         return self.name
@@ -40,9 +44,12 @@ class User(db.Model, UserMixin):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     avatar = Column(String(100), default='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-    user_role = Column(Enum(UserRoleEnum), ForeignKey(Role.name), nullable=False)
+    user_role = Column(Enum(UserRoleEnum), nullable=False)
+    role = Column(Enum(RoleEnum), nullable=False)
+    role_id = Column(Integer, ForeignKey(Role.id), nullable=False)
 
-    def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar, user_role):
+    def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar, user_role, role,
+                 role_id):
         self.name = name
         self.dateofbirth = dateofbirth
         self.address = address
@@ -53,6 +60,8 @@ class User(db.Model, UserMixin):
         self.password = password
         self.avatar = avatar
         self.user_role = user_role
+        self.role = role
+        self.role_id = role_id
 
     def __str__(self):
         return self.name
@@ -79,12 +88,15 @@ class Year(db.Model):
     classrooms = relationship('ClassRoom', backref='year', lazy=True)
     semesters = relationship('Semester', back_populates='year', lazy=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Grade(db.Model):
     __tablename__ = 'grade'
-    name = Column(String(10), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(Integer, nullable=False)
     classrooms = relationship('ClassRoom', backref='grade', lazy=True)
-    year_name = Column(Integer, ForeignKey(Year.id),nullable=False)
 
     def __str__(self):
         return self.name
@@ -95,7 +107,7 @@ class ClassRoom(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
     quantity = Column(Integer, nullable=False)
-    grade_name = Column(String(10), ForeignKey(Grade.name), nullable=False)
+    grade_name = Column(Integer, ForeignKey(Grade.id), nullable=False)
     year_name = Column(Integer, ForeignKey(Year.id), nullable=False)
     teachingdetails = relationship('TeachingDetails', back_populates='classroom')
     students = relationship('Student', backref='classroom', lazy=True)
@@ -131,7 +143,7 @@ class Subject(db.Model):
 class Semester(db.Model):
     __tablename__ = 'semester'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Enum(SemesterEnum),nullable=False)
+    name = Column(Enum(SemesterEnum), nullable=False)
     year_id = Column(Integer, ForeignKey(Year.id), nullable=False)
     subjectdetails = relationship('SubjectDetails', back_populates='semester')
     year = relationship('Year', back_populates='semesters', lazy=True)
@@ -174,21 +186,22 @@ if __name__ == '__main__':
         db.create_all()
 
         # Tạo các role
-        r1 = Role(name=UserRoleEnum.ADMIN)
-        r2 = Role(name=UserRoleEnum.USER)
-        r3 = Role(name=UserRoleEnum.TEACHER)
-        r4 = Role(name=UserRoleEnum.STAFF)
-        db.session.add_all([r1, r2, r3, r4])
+        r1 = Role(name=RoleEnum.Staff)
+        r2 = Role(name=RoleEnum.Teacher)
+        r3 = Role(name=RoleEnum.Student)
+        db.session.add_all([r1, r2, r3])
 
         # Tạo các user
         import hashlib
 
         u1 = User(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                  user_role=UserRoleEnum.ADMIN, sex=True, dateofbirth=datetime.now(), address='text', phone='text',
+                  user_role=UserRoleEnum.ADMIN, role=RoleEnum.Staff, role_id=1, sex=True, dateofbirth=datetime.now(),
+                  address='text', phone='text',
                   email='test'
                   , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         u2 = User(name='User', username='user', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                  user_role=UserRoleEnum.USER, sex=True, dateofbirth=datetime.now(), address='text', phone='text',
+                  user_role=UserRoleEnum.USER, role=RoleEnum.Staff, role_id=1, sex=True, dateofbirth=datetime.now(),
+                  address='text', phone='text',
                   email='test'
                   , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         y1 = Year(name='2020 - 2021')

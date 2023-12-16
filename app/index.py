@@ -1,10 +1,8 @@
-import math
-from flask import render_template, request, redirect, jsonify, session
+from flask import render_template, request, redirect
 from flask_login import login_user
-import dao
-from app import app, login
+from app import login, admin, dao
 from app.models import *
-import hashlib
+
 
 
 @app.route('/')
@@ -27,15 +25,11 @@ def load_user(user_id):
 def login_admin():
     if request.method == 'POST':
         username = request.form.get("username")
-        password = request.form.get("password", "")
-        password = str(hashlib.md5(password.strip().encode("utf-8")).hexdigest())
-        user = User.query.filter(User.username == username.strip(), User.password == password).first()
+        password = request.form.get("password")
+        user = dao.authenicate_user(username, password)
         if user:
             login_user(user=user)
-
     return redirect("/admin")
 
-
 if __name__ == '__main__':
-    from app import admin
     app.run(debug=True)

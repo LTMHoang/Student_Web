@@ -1,26 +1,30 @@
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin, BaseView, expose
-from app import app, db
+from app import app, db, admin
 from app.models import *
 from flask_login import current_user, logout_user
 from flask import redirect
 
+admin = Admin(app=app, name='QUẢN TRỊ TRƯỜNG HỌC', template_mode='bootstrap4')
 
-class AuthenticatedAdminMV(ModelView):
+
+class AuthenticatedAdmin(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.user_role == UserRoleEnum.ADMIN
 
 
-class AuthenticatedAdminBV(BaseView):
+class AuthenticatedUser(BaseView):
     def is_accessible(self):
-        return current_user.is_authenticated and current_user.user_role == UserRoleEnum.USER
+        return current_user.is_authenticated
 
 
-class UserView(ModelView):
-    pass
+class StatsView(AuthenticatedUser):
+    @expose("/")
+    def index(self):
+        return self.render('admin/stats.html')
 
 
-class LogoutView(BaseView):
+class LogoutView(AuthenticatedUser):
     @expose('/')
     def index(self):
         logout_user()
@@ -31,7 +35,7 @@ class LogoutView(BaseView):
         return current_user.is_authenticated
 
 
-class YearView(AuthenticatedAdminMV):
+class YearView(AuthenticatedAdmin):
     column_display_pk = True
     can_view_details = True
     can_export = True
@@ -46,23 +50,79 @@ class YearView(AuthenticatedAdminMV):
     can_create = True
 
 
-class SemesterView(AuthenticatedAdminMV):
+class SemesterView(AuthenticatedAdmin):
     column_display_pk = True
     can_view_details = True
     can_export = True
     edit_modal = True
     details_modal = True
     create_modal = True
-    column_list = ['id', 'name', 'year_id']
+    column_list = ['id', 'name', 'year.name']
     column_labels = {
         'id': 'STT',
         'name': 'Học Kỳ',
-        'year_id': 'Năm Học'
+        'year.name': 'Năm Học'
+    }
+    column_exclude_list = ['SubjectDetails']
+
+
+class SubjectView(AuthenticatedAdmin):
+    column_display_pk = True
+    can_view_details = True
+    can_export = True
+    edit_modal = True
+    details_modal = True
+    create_modal = True
+    column_list = ['id', 'name']
+    column_labels = {
+        'id': 'STT',
+        'name': 'Tên Môn Học',
     }
 
 
-admin = Admin(app=app, name='QUẢN TRỊ', template_mode='bootstrap4')
-admin.add_view(UserView(User, db.session))
+class GradeView(AuthenticatedAdmin):
+    column_display_pk = True
+    can_view_details = True
+    can_export = True
+    edit_modal = True
+    details_modal = True
+    create_modal = True
+    column_list = ['id', 'name']
+    column_labels = {
+        'id': 'STT',
+        'name': 'Tên Khối',
+    }
+
+
+class UserView(AuthenticatedAdmin):
+    column_display_pk = True
+    can_view_details = True
+    can_export = True
+    edit_modal = True
+    details_modal = True
+    create_modal = True
+    column_list = ['id', 'name', 'dateofbirth', 'address', 'sex', 'phone', 'email', 'username', 'password', 'avatar',
+                   'user_role', 'role']
+    column_labels = {
+        'id': 'STT',
+        'name': 'Họ Và Tên',
+        'dateofbirth': 'Ngày Sinh',
+        'address': 'Địa Chỉ',
+        'sex': 'Giới Tính',
+        'phone': 'Số Điện Thoại',
+        'email': 'Email',
+        'username': 'Tên Tài Khoản',
+        'password': 'Mật Khẩu',
+        'avatar': 'Ảnh Đại Diện',
+        'user_role': 'Vai Trò',
+        'role': 'Chức Vụ'
+    }
+
+
 admin.add_view(LogoutView(name="Đăng xuất"))
+admin.add_view(StatsView(name="Thống Kê Kết Quả Học Tập"))
 admin.add_view(YearView(Year, db.session, name='Quản Lý Năm Học'))
 admin.add_view(SemesterView(Semester, db.session, name='Quản Lý Học Kỳ'))
+admin.add_view(SubjectView(Subject, db.session, name='Quản Lý Môn Học'))
+admin.add_view(GradeView(Grade, db.session, name='Quản Lý Khối Lớp'))
+admin.add_view(UserView(User, db.session, name='Quản Lý Người Dùng'))
