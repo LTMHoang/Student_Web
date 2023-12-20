@@ -27,9 +27,13 @@ class StatsView(AuthenticatedUser):
 class LogoutView(AuthenticatedUser):
     @expose('/')
     def index(self):
-        logout_user()
 
-        return redirect('/admin')
+        if current_user.user_role == UserRoleEnum.ADMIN:
+            logout_user()
+            return redirect('/admin')
+        else:
+            logout_user()
+            return redirect('/')
 
     def is_accessible(self):
         return current_user.is_authenticated
@@ -119,6 +123,15 @@ class UserView(AuthenticatedAdmin):
     }
 
 
+class HomePageView(BaseView):
+    @expose('/')
+    def index(self):
+        return redirect('/')
+
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+
 admin.add_view(LogoutView(name="Đăng xuất"))
 admin.add_view(StatsView(name="Thống Kê Kết Quả Học Tập"))
 admin.add_view(YearView(Year, db.session, name='Quản Lý Năm Học'))
@@ -126,3 +139,4 @@ admin.add_view(SemesterView(Semester, db.session, name='Quản Lý Học Kỳ'))
 admin.add_view(SubjectView(Subject, db.session, name='Quản Lý Môn Học'))
 admin.add_view(GradeView(Grade, db.session, name='Quản Lý Khối Lớp'))
 admin.add_view(UserView(User, db.session, name='Quản Lý Người Dùng'))
+admin.add_view(HomePageView(name='Trang Chủ'))

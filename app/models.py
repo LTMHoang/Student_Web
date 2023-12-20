@@ -1,10 +1,12 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, Boolean, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 from app import db, app
 from flask_login import UserMixin
 import enum
+
+Base = declarative_base()
 
 
 class UserRoleEnum(enum.Enum):
@@ -29,11 +31,11 @@ class Role(db.Model):
     name = Column(Enum(RoleEnum), primary_key=True)
 
     def __str__(self):
-        return self.name
+        return self.name.value
 
 
 class User(db.Model, UserMixin):
-    __tablename__ = 'user'
+    __abstract__ = True
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False, unique=True)
     dateofbirth = Column(DateTime)
@@ -69,16 +71,27 @@ class User(db.Model, UserMixin):
 
 class Teacher(User):
     __tablename__ = 'teacher'
-    id = Column(Integer, ForeignKey(User.id), primary_key=True)
     teachingdetails = relationship('TeachingDetails', back_populates='teacher')
 
     def __str__(self):
         return self.name
 
-    def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
-                 user_role):
-        super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
-                                      user_role)
+    # def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #              user_role, role, role_id):
+    #     super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #                                   user_role, role, role_id)
+
+
+class Staff(User):
+    __tablename__ = 'staff'
+
+    def __str__(self):
+        return self.name
+
+    # def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #              user_role, role, role_id):
+    #     super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #                                   user_role, role, role_id)
 
 
 class Year(db.Model):
@@ -118,15 +131,14 @@ class ClassRoom(db.Model):
 
 class Student(User):
     __tablename__ = 'student'
-    id = Column(Integer, ForeignKey(User.id), primary_key=True)
     subjectdetails = relationship('SubjectDetails', back_populates='student')
     id_classroom = Column(Integer, ForeignKey(ClassRoom.id), nullable=False)
 
-    def __init__(self, id_classroom, name, dateofbirth, address, sex, phone, email, username, password, avatar,
-                 user_role):
-        self.id_classroom = id_classroom
-        super(Student, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
-                                      user_role)
+    # def __init__(self, id_classroom, name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #              user_role,role,role_id):
+    #     self.id_classroom = id_classroom
+    #     super(Student, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #                                   user_role, role, role_id)
 
 
 class Subject(db.Model):
@@ -155,7 +167,7 @@ class Semester(db.Model):
 class TeachingDetails(db.Model):
     __tablename__ = 'teachingdetails'
     id = Column(Integer, primary_key=True)
-    id_teacher = Column(Integer, ForeignKey(User.id))
+    id_teacher = Column(Integer, ForeignKey(Teacher.id))
     subject_name = Column(Integer, ForeignKey(Subject.id))
     classroom_name = Column(Integer, ForeignKey(ClassRoom.id))
     schedule = Column(DateTime, nullable=False)
@@ -168,7 +180,7 @@ class SubjectDetails(db.Model):
     __tablename__ = 'subjectdetails'
     id = Column(Integer, primary_key=True)
     marktype = Column(String(50), nullable=False)
-    mark = Column(Float, nullable=False),
+    mark = Column(Float, nullable=False)
     subject_name = Column(Integer, ForeignKey(Subject.id), nullable=True)
     id_student = Column(Integer, ForeignKey(Student.id), nullable=False)
     semester_name = Column(Integer, ForeignKey(Semester.id), nullable=False)
@@ -194,16 +206,18 @@ if __name__ == '__main__':
         # Tạo các user
         import hashlib
 
-        u1 = User(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                  user_role=UserRoleEnum.ADMIN, role=RoleEnum.Staff, role_id=1, sex=True, dateofbirth=datetime.now(),
-                  address='text', phone='text',
-                  email='test'
-                  , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-        u2 = User(name='User', username='user', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                  user_role=UserRoleEnum.USER, role=RoleEnum.Staff, role_id=1, sex=True, dateofbirth=datetime.now(),
-                  address='text', phone='text',
-                  email='test'
-                  , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
+        u1 = Staff(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                     user_role=UserRoleEnum.ADMIN, role=RoleEnum.Staff, role_id=1, sex=True,
+                     dateofbirth=datetime.now(),
+                     address='text', phone='text',
+                     email='test'
+                     , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
+        u2 = Teacher(name='User', username='user', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                     user_role=UserRoleEnum.USER, role=RoleEnum.Teacher, role_id=2, sex=True,
+                     dateofbirth=datetime.now(),
+                     address='text', phone='text',
+                     email='test'
+                     , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         y1 = Year(name='2020 - 2021')
         y2 = Year(name='2021 - 2022')
         y3 = Year(name='2022 - 2023')
