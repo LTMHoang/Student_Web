@@ -5,13 +5,12 @@ from flask_login import LoginManager
 
 app = Flask(__name__)
 
-app.secret_key = "14124512B3JKB12IBTIB3214TNY23KLBJ4TB3JKT3B4TUB3T43%%#%^46%$#^#$%@$%2"
+app.secret_key = '^%*&^^HJGHJGHJFD%^&%&*^*(^^^&^(*^^$%^GHJFGHJH'
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/student_data?charset=utf8mb4" % quote(
-    'Admin@123')
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+    '123456a@A')
 
-# Phân trang
-app.config["PAGE_SIZE"] = 1
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+# app.config["PAGE_SIZE"] = 6
 
 db = SQLAlchemy(app=app)
 login = LoginManager(app=app)
