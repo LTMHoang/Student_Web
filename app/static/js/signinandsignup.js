@@ -39,3 +39,25 @@ let mainF = (e) => {
 };
 
 window.addEventListener("load", mainF);
+
+function getSelectedRoleSN() {
+    // Get the select element
+    var selectElement = document.getElementById("roles_sn");
+
+    // Get the selected option value
+    var selectedValue = selectElement.value;
+
+    // Display the selected value in the readonly input
+    document.getElementById("selectedRole_sn").value = selectedValue;
+}
+
+function getSelectedRoleSP() {
+    // Get the select element
+    var selectElement = document.getElementById("roles_sp");
+
+    // Get the selected option value
+    var selectedValue = selectElement.value;
+
+    // Display the selected value in the readonly input
+    document.getElementById("selectedRole_sp").value = selectedValue;
+}
