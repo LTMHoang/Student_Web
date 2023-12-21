@@ -10,7 +10,7 @@ admin = Admin(app=app, name='QUẢN TRỊ TRƯỜNG HỌC', template_mode='boots
 
 class AuthenticatedAdmin(ModelView):
     def is_accessible(self):
-        return current_user.is_authenticated and current_user.user_role == UserRoleEnum.ADMIN
+        return current_user.is_authenticated and current_user.role == RoleEnum.ADMIN
 
 
 class AuthenticatedUser(BaseView):

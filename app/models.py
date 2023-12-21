@@ -1,17 +1,11 @@
-from datetime import datetime
+from datetime import datetime, date
 
+from pymysql import Date
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, Boolean, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from app import db, app
 from flask_login import UserMixin
 import enum
-
-Base = declarative_base()
-
-
-class UserRoleEnum(enum.Enum):
-    USER = "user"
-    ADMIN = "admin"
 
 
 class SemesterEnum(enum.Enum):
@@ -20,9 +14,10 @@ class SemesterEnum(enum.Enum):
 
 
 class RoleEnum(enum.Enum):
+    Admin = "admin",
+    Staff = "staff",
     Teacher = "teacher",
     Student = "student",
-    Staff = "staff",
 
 
 class Role(db.Model):
@@ -46,11 +41,11 @@ class User(db.Model, UserMixin):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     avatar = Column(String(100), default='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-    user_role = Column(Enum(UserRoleEnum), nullable=False)
+    # user_role = Column(Enum(UserRoleEnum), nullable=False)
     role = Column(Enum(RoleEnum), nullable=False)
     role_id = Column(Integer, ForeignKey(Role.id), nullable=False)
 
-    def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar, user_role, role,
+    def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar, role,
                  role_id):
         self.name = name
         self.dateofbirth = dateofbirth
@@ -61,7 +56,6 @@ class User(db.Model, UserMixin):
         self.username = username
         self.password = password
         self.avatar = avatar
-        self.user_role = user_role
         self.role = role
         self.role_id = role_id
 
@@ -72,6 +66,18 @@ class User(db.Model, UserMixin):
 class Teacher(User):
     __tablename__ = 'teacher'
     teachingdetails = relationship('TeachingDetails', back_populates='teacher')
+
+    def __str__(self):
+        return self.name
+
+    # def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #              user_role, role, role_id):
+    #     super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
+    #                                   user_role, role, role_id)
+
+
+class Admin(User):
+    __tablename__ = 'admin'
 
     def __str__(self):
         return self.name
@@ -198,26 +204,28 @@ if __name__ == '__main__':
         db.create_all()
 
         # Tạo các role
-        r1 = Role(name=RoleEnum.Staff)
-        r2 = Role(name=RoleEnum.Teacher)
-        r3 = Role(name=RoleEnum.Student)
-        db.session.add_all([r1, r2, r3])
+        r1 = Role(name=RoleEnum.Admin)
+        r2 = Role(name=RoleEnum.Staff)
+        r3 = Role(name=RoleEnum.Teacher)
+        r4 = Role(name=RoleEnum.Student)
+        db.session.add_all([r1, r2, r3, r4])
+        db.session.commit()
 
         # Tạo các user
         import hashlib
 
-        u1 = Staff(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                     user_role=UserRoleEnum.ADMIN, role=RoleEnum.Staff, role_id=1, sex=True,
-                     dateofbirth=datetime.now(),
-                     address='text', phone='text',
-                     email='test'
-                     , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-        u2 = Teacher(name='User', username='user', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                     user_role=UserRoleEnum.USER, role=RoleEnum.Teacher, role_id=2, sex=True,
-                     dateofbirth=datetime.now(),
-                     address='text', phone='text',
-                     email='test'
-                     , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
+        u1 = Admin(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                   role=RoleEnum.Admin, role_id=1, sex=True,
+                   dateofbirth=datetime.now(),
+                   address='text', phone='text',
+                   email='test'
+                   , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
+        u2 = Staff(name='Staff', username='staff', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                   role=RoleEnum.Staff, role_id=2, sex=True,
+                   dateofbirth=datetime.now(),
+                   address='text', phone='text',
+                   email='test'
+                   , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         y1 = Year(name='2020 - 2021')
         y2 = Year(name='2021 - 2022')
         y3 = Year(name='2022 - 2023')

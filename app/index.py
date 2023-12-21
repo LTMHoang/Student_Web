@@ -1,17 +1,21 @@
 from flask import render_template, request, redirect
 from flask_login import login_user
-from app import login, admin, dao
+from app import login, dao
 from app.models import *
+
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.context_processor
 def common_response():
     return {
-        'RoleEnum':RoleEnum
+        'RoleEnum': RoleEnum
     }
+
+
 @app.route('/signinandsignup')
 def signinandsignup():
     return render_template('signinandsignup.html')
@@ -38,9 +42,11 @@ def login_admin():
             login_user(user=user)
     return redirect("/admin")
 
+
 @app.route("/signupandsignin", methods=['get', 'post'])
 def signupandsignin():
     return render_template('/signupandsignin')
+
+
 if __name__ == '__main__':
     app.run(debug=True)
-
