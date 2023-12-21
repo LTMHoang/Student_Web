@@ -1,8 +1,6 @@
-from datetime import datetime, date
-
-from pymysql import Date
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, Boolean, DateTime
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 from app import db, app
 from flask_login import UserMixin
 import enum
@@ -14,7 +12,7 @@ class SemesterEnum(enum.Enum):
 
 
 class RoleEnum(enum.Enum):
-    Admin = "admin",
+    Admin = "admin"
     Staff = "staff",
     Teacher = "teacher",
     Student = "student",
@@ -41,7 +39,6 @@ class User(db.Model, UserMixin):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     avatar = Column(String(100), default='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-    # user_role = Column(Enum(UserRoleEnum), nullable=False)
     role = Column(Enum(RoleEnum), nullable=False)
     role_id = Column(Integer, ForeignKey(Role.id), nullable=False)
 
@@ -82,22 +79,12 @@ class Admin(User):
     def __str__(self):
         return self.name
 
-    # def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #              user_role, role, role_id):
-    #     super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #                                   user_role, role, role_id)
-
 
 class Staff(User):
     __tablename__ = 'staff'
 
     def __str__(self):
         return self.name
-
-    # def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #              user_role, role, role_id):
-    #     super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #                                   user_role, role, role_id)
 
 
 class Year(db.Model):
@@ -139,13 +126,6 @@ class Student(User):
     __tablename__ = 'student'
     subjectdetails = relationship('SubjectDetails', back_populates='student')
     id_classroom = Column(Integer, ForeignKey(ClassRoom.id), nullable=False)
-
-    # def __init__(self, id_classroom, name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #              user_role,role,role_id):
-    #     self.id_classroom = id_classroom
-    #     super(Student, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #                                   user_role, role, role_id)
-
 
 class Subject(db.Model):
     __tablename__ = 'subject'
