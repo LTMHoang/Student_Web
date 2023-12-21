@@ -1,16 +1,17 @@
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import Admin, BaseView, expose
-from app import app, db, admin
-from app.models import *
-from flask_login import current_user, logout_user
+from app import app, db
+from flask_login import logout_user, current_user
 from flask import redirect
 
-admin = Admin(app=app, name='QUẢN TRỊ TRƯỜNG HỌC', template_mode='bootstrap4')
+from app.models import RoleEnum, Year, Semester, Subject, Grade
+
+admin = Admin(app=app, name='QUẢN TRỊ BÁN HÀNG', template_mode='bootstrap4')
 
 
 class AuthenticatedAdmin(ModelView):
     def is_accessible(self):
-        return current_user.is_authenticated and current_user.role == RoleEnum.ADMIN
+        return current_user.is_authenticated and current_user.role == RoleEnum.Admin
 
 
 class AuthenticatedUser(BaseView):
@@ -27,13 +28,8 @@ class StatsView(AuthenticatedUser):
 class LogoutView(AuthenticatedUser):
     @expose('/')
     def index(self):
-
-        if current_user.user_role == UserRoleEnum.ADMIN:
-            logout_user()
-            return redirect('/admin')
-        else:
-            logout_user()
-            return redirect('/')
+        logout_user()
+        return redirect('/')
 
     def is_accessible(self):
         return current_user.is_authenticated
@@ -138,5 +134,4 @@ admin.add_view(YearView(Year, db.session, name='Quản Lý Năm Học'))
 admin.add_view(SemesterView(Semester, db.session, name='Quản Lý Học Kỳ'))
 admin.add_view(SubjectView(Subject, db.session, name='Quản Lý Môn Học'))
 admin.add_view(GradeView(Grade, db.session, name='Quản Lý Khối Lớp'))
-admin.add_view(UserView(User, db.session, name='Quản Lý Người Dùng'))
 admin.add_view(HomePageView(name='Trang Chủ'))
