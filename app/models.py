@@ -7,22 +7,23 @@ import enum
 
 
 class SemesterEnum(enum.Enum):
-    I = "Học Kỳ I"
-    II = "Học Kỳ II"
+    I = 1
+    II = 2
 
 
 class GradeEnum(enum.Enum):
-    Grade_10 = 1,
-    Grade_11 = 2,
-    Grade_12 = 3,
+    Grade_10 = 10,
+    Grade_11 = 11,
+    Grade_12 = 12,
 
 
-class YearEnum(enum.Enum):
-    Year_2020_2021 = 1,
-    Year_2021_2022 = 2,
-    Year_2022_2023 = 3,
-    Year_2023_2024 = 5,
-    Year_2024_2025 = 6,
+#
+# class YearEnum(enum.Enum):
+#     Year_2020_2021 = 2020,
+#     Year_2021_2022 = 2021,
+#     Year_2022_2023 = 2022,
+#     Year_2023_2024 = 2023,
+#     Year_2024_2025 = 2024,
 
 
 class RoleEnum(enum.Enum):
@@ -50,7 +51,6 @@ class SubjectEnum(enum.Enum):
 
 class Role(db.Model):
     __tablename__ = 'role'
-    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Enum(RoleEnum), primary_key=True)
 
     def __str__(self):
@@ -61,16 +61,15 @@ class User(db.Model, UserMixin):
     __abstract__ = True
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False, unique=True)
-    dateofbirth = Column(DateTime)
+    dob = Column(DateTime)
     address = Column(String(255))
     sex = Column(Boolean, nullable=False)
-    phone = Column(String(10))
+    phone = Column(String(11))
     email = Column(String(100))
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     avatar = Column(String(100), default='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-    role = Column(Enum(RoleEnum), nullable=False)
-    role_id = Column(Integer, ForeignKey(Role.id), nullable=False)
+    role = Column(Enum(RoleEnum), ForeignKey(Role.name), nullable=False)
 
     def __str__(self):
         return self.name
@@ -98,16 +97,16 @@ class Staff(User):
         return self.name
 
 
-class Year(db.Model):
-    __tablename__ = 'year'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Enum(YearEnum), nullable=False)
-    classrooms = relationship('ClassRoom', backref='year', lazy=True)
-    semesters = relationship('Semester', back_populates='year', lazy=True)
-
-    def __str__(self):
-        return self.name
-
+# class Year(db.Model):
+#     __tablename__ = 'year'
+#     id = Column(Integer, primary_key=True)
+#     name = Column(Enum(YearEnum), nullable=False)
+#     classrooms = relationship('ClassRoom', backref='year', lazy=True)
+#     semesters = relationship('Semester', back_populates='year', lazy=True)
+#
+#     def __str__(self):
+#         return self.name
+#
 
 class Grade(db.Model):
     __tablename__ = 'grade'
@@ -125,7 +124,8 @@ class ClassRoom(db.Model):
     name = Column(String(20), nullable=False)
     quantity = Column(Integer, nullable=False)
     grade_name = Column(Integer, ForeignKey(Grade.id), nullable=False)
-    year_name = Column(Integer, ForeignKey(Year.id), nullable=False)
+    # year_name = Column(Integer, ForeignKey(Year.id), nullable=False)
+    year_name = Column(Integer, nullable=False)
     teachingdetails = relationship('TeachingDetails', back_populates='classroom')
     students = relationship('Student', backref='classroom', lazy=True)
 
@@ -141,7 +141,7 @@ class Student(User):
 
 class Subject(db.Model):
     __tablename__ = 'subject'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     name = Column(Enum(SubjectEnum), nullable=False)
     teachingdetails = relationship('TeachingDetails', back_populates='subject')
     subjectdetails = relationship('SubjectDetails', back_populates='subject')
@@ -152,11 +152,13 @@ class Subject(db.Model):
 
 class Semester(db.Model):
     __tablename__ = 'semester'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     name = Column(Enum(SemesterEnum), nullable=False)
-    year_id = Column(Integer, ForeignKey(Year.id), nullable=False)
+    # year_id = Column(Integer, ForeignKey(Year.id), nullable=False)
+    year_name = Column(Integer, nullable=False)
     subjectdetails = relationship('SubjectDetails', back_populates='semester')
-    year = relationship('Year', back_populates='semesters', lazy=True)
+
+    # year = relationship('Year', back_populates='semesters', lazy=True)
 
     def __str__(self):
         return self.name
@@ -165,9 +167,9 @@ class Semester(db.Model):
 class TeachingDetails(db.Model):
     __tablename__ = 'teachingdetails'
     id = Column(Integer, primary_key=True)
-    id_teacher = Column(Integer, ForeignKey(Teacher.id))
-    subject_name = Column(Integer, ForeignKey(Subject.id))
-    classroom_name = Column(Integer, ForeignKey(ClassRoom.id))
+    teacher_id = Column(Integer, ForeignKey(Teacher.id))
+    subject_id = Column(Integer, ForeignKey(Subject.id))
+    classroom_id = Column(Integer, ForeignKey(ClassRoom.id))
     schedule = Column(DateTime, nullable=False)
     teacher = relationship('Teacher', back_populates='teachingdetails')
     subject = relationship('Subject', back_populates='teachingdetails')
@@ -179,9 +181,9 @@ class SubjectDetails(db.Model):
     id = Column(Integer, primary_key=True)
     marktype = Column(String(50), nullable=False)
     mark = Column(Float, nullable=False)
-    subject_name = Column(Integer, ForeignKey(Subject.id), nullable=True)
-    id_student = Column(Integer, ForeignKey(Student.id), nullable=False)
-    semester_name = Column(Integer, ForeignKey(Semester.id), nullable=False)
+    subject_id = Column(Integer, ForeignKey(Subject.id), nullable=True)
+    student_id = Column(Integer, ForeignKey(Student.id), nullable=False)
+    semester_id = Column(Integer, ForeignKey(Semester.id), nullable=False)
     student = relationship('Student', back_populates='subjectdetails')
     semester = relationship('Semester', back_populates='subjectdetails')
     subject = relationship('Subject', back_populates='subjectdetails')
@@ -202,36 +204,56 @@ if __name__ == '__main__':
         r4 = Role(name=RoleEnum.Student)
         db.session.add_all([r1, r2, r3, r4])
         db.session.commit()
-
-        # Tạo Year
-        y1 = Year(name=YearEnum.Year_2020_2021)
-        y2 = Year(name=YearEnum.Year_2021_2022)
-        y3 = Year(name=YearEnum.Year_2022_2023)
-        y4 = Year(name=YearEnum.Year_2023_2024)
-        y5 = Year(name=YearEnum.Year_2024_2025)
+        #
+        # # Tạo Year
+        # y1 = Year(id = YearEnum.Year_2020_2021.value,name=YearEnum.Year_2020_2021)
+        # y2 = Year(id = YearEnum.Year_2021_2022.value,name=YearEnum.Year_2021_2022)
+        # y3 = Year(id = YearEnum.Year_2022_2023.value,name=YearEnum.Year_2022_2023)
+        # y4 = Year(id = YearEnum.Year_2023_2024.value,name=YearEnum.Year_2023_2024)
+        # y5 = Year(id = YearEnum.Year_2024_2025.value,name=YearEnum.Year_2024_2025)
 
         # Tạo Grade
-        g1 = Grade(name=GradeEnum.Grade_10)
-        g2 = Grade(name=GradeEnum.Grade_11)
-        g3 = Grade(name=GradeEnum.Grade_12)
+        g1 = Grade(id=GradeEnum.Grade_10.value, name=GradeEnum.Grade_10)
+        g2 = Grade(id=GradeEnum.Grade_11.value, name=GradeEnum.Grade_11)
+        g3 = Grade(id=GradeEnum.Grade_12.value, name=GradeEnum.Grade_12)
 
-        db.session.add_all([g1, g2, g3, y1, y2, y3, y4])
+        # db.session.add_all([g1, g2, g3, y1, y2, y3, y4])
+        # db.session.commit()
+
+        db.session.add_all([g1, g2, g3])
         db.session.commit()
 
         # Tạo ClassRoom
+        # cr1 = ClassRoom(name="10A1", quantity=50, grade_name=GradeEnum.Grade_10.value,
+        #                 year_name=22)
+        # cr2 = ClassRoom(name="11B1", quantity=60, grade_name=GradeEnum.Grade_11.value,
+        #                 year_name=YearEnum.Year_2022_2023.value)
+        # cr3 = ClassRoom(name="12C1", quantity=45, grade_name=GradeEnum.Grade_12.value,
+        #                 year_name=YearEnum.Year_2022_2023.value)
+        #
+        # db.session.add_all([cr1, cr2, cr3])
+        # db.session.commit()
+
         cr1 = ClassRoom(name="10A1", quantity=50, grade_name=GradeEnum.Grade_10.value,
-                        year_name=YearEnum.Year_2022_2023.value)
+                        year_name=2022)
         cr2 = ClassRoom(name="11B1", quantity=60, grade_name=GradeEnum.Grade_11.value,
-                        year_name=YearEnum.Year_2022_2023.value)
+                        year_name=2022)
         cr3 = ClassRoom(name="12C1", quantity=45, grade_name=GradeEnum.Grade_12.value,
-                        year_name=YearEnum.Year_2022_2023.value)
+                        year_name=2022)
 
         db.session.add_all([cr1, cr2, cr3])
         db.session.commit()
 
         # Tạo Semester
-        st1 = Semester(name=SemesterEnum.I, year_id=YearEnum.Year_2022_2023.value, year=y3)
-        st2 = Semester(name=SemesterEnum.II, year_id=YearEnum.Year_2022_2023.value, year=y3)
+        # st1 = Semester(name=SemesterEnum.I, year_id=YearEnum.Year_2022_2023.value, year=y3)
+        # st2 = Semester(name=SemesterEnum.II, year_id=YearEnum.Year_2022_2023.value, year=y3)
+        #
+        # db.session.add_all([st1, st2])
+        # db.session.commit()
+
+        # Tạo Semester
+        st1 = Semester(id=SemesterEnum.I.value, name=SemesterEnum.I, year_name=2022)
+        st2 = Semester(id=SemesterEnum.II.value, name=SemesterEnum.II, year_name=2022)
 
         db.session.add_all([st1, st2])
         db.session.commit()
@@ -240,28 +262,28 @@ if __name__ == '__main__':
         import hashlib
 
         u1 = Admin(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                   role=RoleEnum.Admin, role_id=RoleEnum.Admin.value, sex=True,
-                   dateofbirth=datetime.now(),
+                   role=RoleEnum.Admin, sex=True,
+                   dob=datetime.now(),
                    address='text', phone='text',
                    email='test'
                    , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         u2 = Staff(name='Staff', username='staff', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                   role=RoleEnum.Staff, role_id=RoleEnum.Staff.value, sex=True,
-                   dateofbirth=datetime.now(),
+                   role=RoleEnum.Staff, sex=True,
+                   dob=datetime.now(),
                    address='text', phone='text',
                    email='test'
                    , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         u3 = Student(name='Student', username='student',
                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                     role=RoleEnum.Student, role_id=RoleEnum.Student.value, classroom_id=1, sex=True,
-                     dateofbirth=datetime.now(),
+                     role=RoleEnum.Student, classroom_id=1, sex=True,
+                     dob=datetime.now(),
                      address='text', phone='text',
                      email='test'
                      , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         u4 = Teacher(name='Teacher', username='teacher',
                      password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                     role=RoleEnum.Staff, role_id=RoleEnum.Teacher.value, sex=True,
-                     dateofbirth=datetime.now(),
+                     role=RoleEnum.Staff, sex=True,
+                     dob=datetime.now(),
                      address='text', phone='text',
                      email='test'
                      , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
@@ -270,20 +292,20 @@ if __name__ == '__main__':
         db.session.commit()
 
         # Tạo Subject
-        sj1 = Subject(name=SubjectEnum.Mathematics)
-        sj2 = Subject(name=SubjectEnum.Literature)
-        sj3 = Subject(name=SubjectEnum.English)
-        sj4 = Subject(name=SubjectEnum.Physics)
-        sj5 = Subject(name=SubjectEnum.Chemistry)
-        sj6 = Subject(name=SubjectEnum.Biology)
-        sj7 = Subject(name=SubjectEnum.History)
-        sj8 = Subject(name=SubjectEnum.Geography)
-        sj9 = Subject(name=SubjectEnum.Civics)
-        sj10 = Subject(name=SubjectEnum.ComputerScience)
-        sj11 = Subject(name=SubjectEnum.Technology_Education)
-        sj12 = Subject(name=SubjectEnum.Physical_Education)
-        sj13 = Subject(name=SubjectEnum.NationalDefense_SecurityEducation)
+        sj1 = Subject(id=SubjectEnum.Mathematics.value, name=SubjectEnum.Mathematics)
+        sj2 = Subject(id=SubjectEnum.Literature.value, name=SubjectEnum.Literature)
+        sj3 = Subject(id=SubjectEnum.English.value, name=SubjectEnum.English)
+        sj4 = Subject(id=SubjectEnum.Physics.value, name=SubjectEnum.Physics)
+        sj5 = Subject(id=SubjectEnum.Chemistry.value, name=SubjectEnum.Chemistry)
+        sj6 = Subject(id=SubjectEnum.Biology.value, name=SubjectEnum.Biology)
+        sj7 = Subject(id=SubjectEnum.History.value, name=SubjectEnum.History)
+        sj8 = Subject(id=SubjectEnum.Geography.value, name=SubjectEnum.Geography)
+        sj9 = Subject(id=SubjectEnum.Civics.value, name=SubjectEnum.Civics)
+        sj10 = Subject(id=SubjectEnum.ComputerScience.value, name=SubjectEnum.ComputerScience)
+        sj11 = Subject(id=SubjectEnum.Technology_Education.value, name=SubjectEnum.Technology_Education)
+        sj12 = Subject(id=SubjectEnum.Physical_Education.value, name=SubjectEnum.Physical_Education)
+        sj13 = Subject(id=SubjectEnum.NationalDefense_SecurityEducation.value,
+                       name=SubjectEnum.NationalDefense_SecurityEducation)
 
         db.session.add_all([sj1, sj2, sj3, sj4, sj5, sj6, sj7, sj8, sj9, sj10, sj11, sj12, sj13])
         db.session.commit()
-
