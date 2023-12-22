@@ -1,11 +1,14 @@
 from flask import render_template, request, redirect
+from flask_admin import expose
+
 import dao
 from app import app, login
-from flask_login import login_user
+from flask_login import login_user, logout_user
 
 from app.models import RoleEnum, Admin, Staff, Teacher, Student
 
 selected_role = ""
+
 
 @app.route('/')
 def index():
@@ -54,6 +57,11 @@ def login():
     return redirect("/signinandsignup")
 
 
+@app.route("/signupdangsignin", methods=['get', 'post'])
+def signup():
+    pass
+
+
 @app.route("/signupandsignin", methods=['get', 'post'])
 def signupandsignin():
     return render_template('/signupandsignin')
@@ -61,4 +69,5 @@ def signupandsignin():
 
 if __name__ == '__main__':
     from app import admin
+
     app.run(debug=True)

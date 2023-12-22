@@ -11,11 +11,25 @@ class SemesterEnum(enum.Enum):
     II = "Học Kỳ II"
 
 
+class GradeEnum(enum.Enum):
+    Grade_10 = 1,
+    Grade_11 = 2,
+    Grade_12 = 3,
+
+
+class YearEnum(enum.Enum):
+    Year_2020_2021 = 1,
+    Year_2021_2022 = 2,
+    Year_2022_2023 = 3,
+    Year_2023_2024 = 5,
+    Year_2024_2025 = 6,
+
+
 class RoleEnum(enum.Enum):
-    Admin = "admin"
-    Staff = "staff",
-    Teacher = "teacher",
-    Student = "student",
+    Admin = 1,
+    Staff = 2,
+    Teacher = 3,
+    Student = 4
 
 
 class Role(db.Model):
@@ -41,21 +55,6 @@ class User(db.Model, UserMixin):
     avatar = Column(String(100), default='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
     role = Column(Enum(RoleEnum), nullable=False)
     role_id = Column(Integer, ForeignKey(Role.id), nullable=False)
-
-    def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar, role,
-                 role_id):
-        self.name = name
-        self.dateofbirth = dateofbirth
-        self.address = address
-        self.sex = sex
-        self.phone = phone
-        self.email = email
-        self.username = username
-        self.password = password
-        self.avatar = avatar
-        self.role = role
-        self.role_id = role_id
-
     def __str__(self):
         return self.name
 
@@ -67,10 +66,6 @@ class Teacher(User):
     def __str__(self):
         return self.name
 
-    # def __init__(self, name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #              user_role, role, role_id):
-    #     super(Teacher, self).__init__(name, dateofbirth, address, sex, phone, email, username, password, avatar,
-    #                                   user_role, role, role_id)
 
 
 class Admin(User):
@@ -90,7 +85,7 @@ class Staff(User):
 class Year(db.Model):
     __tablename__ = 'year'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(11), nullable=False)
+    name = Column(Enum(YearEnum), nullable=False)
     classrooms = relationship('ClassRoom', backref='year', lazy=True)
     semesters = relationship('Semester', back_populates='year', lazy=True)
 
@@ -101,7 +96,7 @@ class Year(db.Model):
 class Grade(db.Model):
     __tablename__ = 'grade'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Integer, nullable=False)
+    name = Column(Enum(GradeEnum), nullable=False)
     classrooms = relationship('ClassRoom', backref='grade', lazy=True)
 
     def __str__(self):
@@ -125,7 +120,8 @@ class ClassRoom(db.Model):
 class Student(User):
     __tablename__ = 'student'
     subjectdetails = relationship('SubjectDetails', back_populates='student')
-    id_classroom = Column(Integer, ForeignKey(ClassRoom.id), nullable=False)
+    classroom_id = Column(Integer, ForeignKey(ClassRoom.id), nullable=False)
+
 
 class Subject(db.Model):
     __tablename__ = 'subject'
@@ -191,26 +187,68 @@ if __name__ == '__main__':
         db.session.add_all([r1, r2, r3, r4])
         db.session.commit()
 
+        # Tạo Year
+        y1 = Year(name=YearEnum.Year_2020_2021)
+        y2 = Year(name=YearEnum.Year_2021_2022)
+        y3 = Year(name=YearEnum.Year_2022_2023)
+        y4 = Year(name=YearEnum.Year_2023_2024)
+        y5 = Year(name=YearEnum.Year_2024_2025)
+
+        # Tạo Grade
+        g1 = Grade(name=GradeEnum.Grade_10)
+        g2 = Grade(name=GradeEnum.Grade_11)
+        g3 = Grade(name=GradeEnum.Grade_12)
+
+        db.session.add_all([g1, g2, g3, y1, y2, y3, y4])
+        db.session.commit()
+
+        # Tạo ClassRoom
+        cr1 = ClassRoom(name="10A1", quantity=50, grade_name=GradeEnum.Grade_10.value,
+                        year_name=YearEnum.Year_2022_2023.value)
+        cr2 = ClassRoom(name="11B1", quantity=60, grade_name=GradeEnum.Grade_11.value,
+                        year_name=YearEnum.Year_2022_2023.value)
+        cr3 = ClassRoom(name="12C1", quantity=45, grade_name=GradeEnum.Grade_12.value,
+                        year_name=YearEnum.Year_2022_2023.value)
+
+        db.session.add_all([cr1, cr2, cr3])
+        db.session.commit()
+
+        # Tạo Semester
+        st1 = Semester(name=SemesterEnum.I, year_id=YearEnum.Year_2022_2023.value, year=y3)
+        st2 = Semester(name=SemesterEnum.II, year_id=YearEnum.Year_2022_2023.value, year=y3)
+
+        db.session.add_all([st1, st2])
+        db.session.commit()
+
         # Tạo các user
         import hashlib
 
         u1 = Admin(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                   role=RoleEnum.Admin, role_id=1, sex=True,
+                   role=RoleEnum.Admin, role_id=RoleEnum.Admin.value, sex=True,
                    dateofbirth=datetime.now(),
                    address='text', phone='text',
                    email='test'
                    , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
         u2 = Staff(name='Staff', username='staff', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
-                   role=RoleEnum.Staff, role_id=2, sex=True,
+                   role=RoleEnum.Staff, role_id=RoleEnum.Staff.value, sex=True,
                    dateofbirth=datetime.now(),
                    address='text', phone='text',
                    email='test'
                    , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
-        y1 = Year(name='2020 - 2021')
-        y2 = Year(name='2021 - 2022')
-        y3 = Year(name='2022 - 2023')
-        y4 = Year(name='2023 - 2024')
-        db.session.add_all([y1, y2, y3, y4])
-        db.session.add_all([u1, u2])
+        u3 = Student(name='Student', username='student',
+                     password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                     role=RoleEnum.Student, role_id=RoleEnum.Student.value, classroom_id=1, sex=True,
+                     dateofbirth=datetime.now(),
+                     address='text', phone='text',
+                     email='test'
+                     , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
+        u4 = Teacher(name='Teacher', username='teacher',
+                     password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
+                     role=RoleEnum.Staff, role_id=RoleEnum.Teacher.value, sex=True,
+                     dateofbirth=datetime.now(),
+                     address='text', phone='text',
+                     email='test'
+                     , avatar='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
 
+        db.session.add_all([u1, u2, u3, u4])
         db.session.commit()
