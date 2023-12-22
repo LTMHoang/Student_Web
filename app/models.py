@@ -32,6 +32,22 @@ class RoleEnum(enum.Enum):
     Student = 4
 
 
+class SubjectEnum(enum.Enum):
+    Mathematics = 1,
+    Literature = 2,
+    English = 3,
+    Physics = 4,
+    Chemistry = 5,
+    Biology = 6,
+    History = 7,
+    Geography = 8,
+    Civics = 9,
+    ComputerScience = 10,
+    Technology_Education = 11,
+    Physical_Education = 12,
+    NationalDefense_SecurityEducation = 13,
+
+
 class Role(db.Model):
     __tablename__ = 'role'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -55,6 +71,7 @@ class User(db.Model, UserMixin):
     avatar = Column(String(100), default='https://genshin-guide.com/wp-content/uploads/yae-miko.png')
     role = Column(Enum(RoleEnum), nullable=False)
     role_id = Column(Integer, ForeignKey(Role.id), nullable=False)
+
     def __str__(self):
         return self.name
 
@@ -65,7 +82,6 @@ class Teacher(User):
 
     def __str__(self):
         return self.name
-
 
 
 class Admin(User):
@@ -126,7 +142,7 @@ class Student(User):
 class Subject(db.Model):
     __tablename__ = 'subject'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100), nullable=False)
+    name = Column(Enum(SubjectEnum), nullable=False)
     teachingdetails = relationship('TeachingDetails', back_populates='subject')
     subjectdetails = relationship('SubjectDetails', back_populates='subject')
 
@@ -179,7 +195,7 @@ if __name__ == '__main__':
         # Tạo các bảng
         db.create_all()
 
-        # Tạo các role
+        # Tạo các Role
         r1 = Role(name=RoleEnum.Admin)
         r2 = Role(name=RoleEnum.Staff)
         r3 = Role(name=RoleEnum.Teacher)
@@ -220,7 +236,7 @@ if __name__ == '__main__':
         db.session.add_all([st1, st2])
         db.session.commit()
 
-        # Tạo các user
+        # Tạo User
         import hashlib
 
         u1 = Admin(name='Admin', username='admin', password=str(hashlib.md5('123456'.encode('utf-8')).hexdigest()),
@@ -252,3 +268,22 @@ if __name__ == '__main__':
 
         db.session.add_all([u1, u2, u3, u4])
         db.session.commit()
+
+        # Tạo Subject
+        sj1 = Subject(name=SubjectEnum.Mathematics)
+        sj2 = Subject(name=SubjectEnum.Literature)
+        sj3 = Subject(name=SubjectEnum.English)
+        sj4 = Subject(name=SubjectEnum.Physics)
+        sj5 = Subject(name=SubjectEnum.Chemistry)
+        sj6 = Subject(name=SubjectEnum.Biology)
+        sj7 = Subject(name=SubjectEnum.History)
+        sj8 = Subject(name=SubjectEnum.Geography)
+        sj9 = Subject(name=SubjectEnum.Civics)
+        sj10 = Subject(name=SubjectEnum.ComputerScience)
+        sj11 = Subject(name=SubjectEnum.Technology_Education)
+        sj12 = Subject(name=SubjectEnum.Physical_Education)
+        sj13 = Subject(name=SubjectEnum.NationalDefense_SecurityEducation)
+
+        db.session.add_all([sj1, sj2, sj3, sj4, sj5, sj6, sj7, sj8, sj9, sj10, sj11, sj12, sj13])
+        db.session.commit()
+
